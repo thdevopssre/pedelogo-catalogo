@@ -30,8 +30,6 @@ pipeline {
         }
 
         stage('Deploy Kubernetes') {
-            agent {
-                }
             }
             environment {
                 tag_version = "${env.BUILD_ID}"
