@@ -1,6 +1,6 @@
 pipeline {
     agent any
-
+    
     environment {
         SCANNER_HOME = tool 'sonar-scanner'
     }
@@ -18,7 +18,7 @@ pipeline {
             }
         }
 
-        stage("Sonarqube Analysis") {
+        stage("Sonarqube Analysis ") {
             steps {
                 withSonarQubeEnv('sonar-server') {
                     sh ''' 
@@ -32,9 +32,9 @@ pipeline {
         stage("quality gate") {
             steps {
                 script {
-                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token'
+                    waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
                 }
-            }
+            } 
         }
 
         stage('OWASP FS SCAN') {
@@ -44,64 +44,46 @@ pipeline {
             }
         }
 
-        stage('Docker Scout FS') {
+        stage('TRIVY FS SCAN') {
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh 'docker-scout quickview fs://.'
-                        sh 'docker-scout cves fs://.'
-                    }
-                }   
+                sh "trivy fs . > trivyfs.txt"
             }
         }
 
-        stage('Docker Build Image') {
+        stage("Docker Build & Push") {
             steps {
                 script {
-                    dockerapp = docker.build("thsre/api-produto:${env.BUILD_ID}",
-                      '-f ./src/PedeLogo.Catalogo.Api/Dockerfile .')
-                }
-            }
-        }
-
-        stage('Docker Push Image') {
-            steps {
-                script {
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {   
+                        dockerapp = docker.build("thsre/api-produto:${env.BUILD_ID}", '-f ./src/PedeLogo.Catalogo.Api/Dockerfile .')
                         docker.withRegistry('https://registry.hub.docker.com', 'docker') {
-                        dockerapp.push('latest')
-                        dockerapp.push("${env.BUILD_ID}")
+                            dockerapp.push('latest')
+                            dockerapp.push("${env.BUILD_ID}")
+                        }
                     }
                 }
             }
         }
-
 
         stage("TRIVY") {
             steps {
-                sh "trivy image thsre/api-produto:latest > trivyimage.txt" 
+                sh "trivy image nasi101/netflix:latest > trivyimage.txt" 
             }
         }
 
-        stage('Docker Scout Image') {
+        stage('Deploy to container') {
             steps {
-                script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
-                        sh 'docker-scout quickview thsre/api-produto:latest'
-                        sh 'docker-scout cves thsre/api-produto:latest'
-                        sh 'docker-scout recommendations thsre/api-produto:latest'
-                    }
-                }
+                sh 'docker run -d -p 8081:80 nasi101/netflix:latest'
             }
         }
 
         stage('Deploy to Kubernetes') {
             steps {
                 script {
-                    dir('K8S') {
+                    dir('Kubernetes') {
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                            sh 'kubectl apply -f api.yml'
-                            sh 'kubectl apply -f mongo.yml'
-                        }
+                            sh 'kubectl apply -f deployment.yml'
+                            sh 'kubectl apply -f service.yml'
+                        }   
                     }
                 }
             }
