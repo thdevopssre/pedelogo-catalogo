@@ -58,7 +58,8 @@ pipeline {
         stage('Docker Build Image') {
             steps {
                 script {
-                    dockerapp = docker.build("thsre/api-produto:${env.BUILD_ID}", '-f ./src/PedeLogo.Catalogo.Api/Dockerfile .')
+                    dockerapp = docker.build("thsre/api-produto:${env.BUILD_ID}",
+                      '-f ./src/PedeLogo.Catalogo.Api/Dockerfile .')
                 }
             }
         }
@@ -66,13 +67,14 @@ pipeline {
         stage('Docker Push Image') {
             steps {
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', 'docker') {
+                        docker.withRegistry('https://registry.hub.docker.com', 'docker') {
                         dockerapp.push('latest')
                         dockerapp.push("${env.BUILD_ID}")
                     }
                 }
             }
         }
+
 
         stage("TRIVY") {
             steps {
