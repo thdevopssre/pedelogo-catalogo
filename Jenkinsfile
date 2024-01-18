@@ -81,8 +81,8 @@ pipeline {
                 script {
                     dir('Kubernetes') {
                         withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                            sh 'kubectl apply -f deployment.yml'
-                            sh 'kubectl apply -f service.yml'
+                            sh 'kubectl apply -f api.yml'
+                            sh 'kubectl apply -f mongo.yml'
                         }   
                     }
                 }
