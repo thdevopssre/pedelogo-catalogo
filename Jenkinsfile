@@ -72,21 +72,5 @@ pipeline {
                 sh 'docker run -d -p 8081:80 thsre/api-produto:latest'
             }
         }
-
-        stage('Deploy Kubernetes') {
-            agent {
-                kubernetes {
-                    cloud 'kubernetes'
-                }
-            }
-            steps {
-                dir ('k8s') {
-                    withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'kubeconfig', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                        sh 'kubectl apply -f api.yml'
-                        sh 'kubectl apply -f mongo.yml'
-                    }
-                }
-            }
-        }
     }
 }
