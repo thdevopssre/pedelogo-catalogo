@@ -79,14 +79,12 @@ pipeline {
                     cloud 'kubernetes'
                 }
             }
-            environment {
-                tag_version = "${env.BUILD_ID}"
-            }
 
             steps {
-                sh 'sed -i "s/{{tag}}/$tag_version/g" ./k8s/api.yaml'
-                sh 'cat ./k8s/api.yaml'
-                kubernetesDeploy(configs: '**/k8s/**', kubeconfigId: 'kubeconfig')
+                dir ('k8s'){
+                withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '')
+                        sh 'kubectl apply -f api.yml'
+                        sh 'kubectl apply -f mongo.yml'
             }
         }
     }
