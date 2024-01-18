@@ -13,7 +13,7 @@ spec:
     spec:            
       containers:
       - name: api
-        image: thsre/api-produto:{{tag}}
+        image: thsre/api-produto:latest
         ports:
         - containerPort: 80
         imagePullPolicy: Always
