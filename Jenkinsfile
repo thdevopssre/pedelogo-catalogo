@@ -73,7 +73,12 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
+        stage('Deploy Kubernetes') {
+            agent {
+                kubernetes {
+                    cloud 'kubernetes'
+                }
+            }
             environment {
                 tag_version = "${env.BUILD_ID}"
             }
