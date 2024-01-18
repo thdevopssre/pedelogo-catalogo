@@ -18,23 +18,20 @@ pipeline {
             }
         }
 
-        stage("Sonarqube Analysis ") {
+        stage("Sonarqube Analysis") {
             steps {
                 withSonarQubeEnv('sonar-server') {
-                    sh ''' 
-                        $SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=api-produto \
-                        -Dsonar.projectKey=api-produto
-                    '''
+                    sh "$SCANNER_HOME/bin/sonar-scanner -Dsonar.projectName=api-produto -Dsonar.projectKey=api-produto"
                 }
             }
         }
 
-        stage("quality gate") {
+        stage("Quality Gate") {
             steps {
                 script {
                     waitForQualityGate abortPipeline: false, credentialsId: 'Sonar-token' 
                 }
-            } 
+            }
         }
 
         stage('OWASP FS SCAN') {
@@ -53,7 +50,7 @@ pipeline {
         stage("Docker Build & Push") {
             steps {
                 script {
-                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {   
+                    withDockerRegistry(credentialsId: 'docker', toolName: 'docker') {
                         dockerapp = docker.build("thsre/api-produto:${env.BUILD_ID}", '-f ./src/PedeLogo.Catalogo.Api/Dockerfile .')
                         docker.withRegistry('https://registry.hub.docker.com', 'docker') {
                             dockerapp.push('latest')
@@ -70,22 +67,26 @@ pipeline {
             }
         }
 
-        stage('Deploy to container') {
+        stage('Deploy to Container') {
             steps {
                 sh 'docker run -d -p 8081:80 thsre/api-produto:latest'
             }
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    dir('K8s') {
-                        withKubeConfig(caCertificate: '', clusterName: '', contextName: '', credentialsId: 'k8s', namespace: '', restrictKubeConfigAccess: false, serverUrl: '') {
-                            sh 'kubectl apply -f api.yml'
-                            sh 'kubectl apply -f mongo.yml'
-                        }   
-                    }
+            agent {
+                kubernetes {
+                    cloud 'kubernetes'
                 }
+            }
+            environment {
+                tag_version = "${env.BUILD_ID}"
+            }
+
+            steps {
+                sh 'sed -i "s/{{tag}}/$tag_version/g" ./k8s/api.yaml'
+                sh 'cat ./k8s/api.yaml'
+                kubernetesDeploy(configs: '**/k8s/**', kubeconfigId: 'kubeconfig')
             }
         }
     }
