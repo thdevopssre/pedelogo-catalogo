@@ -66,13 +66,13 @@ pipeline {
 
         stage("TRIVY") {
             steps {
-                sh "trivy image nasi101/netflix:latest > trivyimage.txt" 
+                sh "trivy image thsre/api-produto:latest > trivyimage.txt" 
             }
         }
 
         stage('Deploy to container') {
             steps {
-                sh 'docker run -d -p 8081:80 nasi101/netflix:latest'
+                sh 'docker run -d -p 8081:80 thsre/api-produto:latest'
             }
         }
 
