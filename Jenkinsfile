@@ -72,5 +72,14 @@ pipeline {
                 sh 'docker run -d -p 8081:80 thsre/api-produto:latest'
             }
         }
+        stage('Deploy API helm chart on EKS') {
+            steps {
+                script {
+                    sh ('aws eks update-kubeconfig --name MATRIX-EKS --region us-east-1')
+                    sh "kubectl get ns"
+                    sh "helm  upgrade --install api ./devops"
+                }
+            }
+        }
     }
 }
