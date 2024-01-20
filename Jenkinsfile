@@ -77,7 +77,7 @@ pipeline {
                 script {
                     sh ('aws eks update-kubeconfig --name MATRIX-EKS --region us-east-1')
                     sh "kubectl get ns"
-                    sh "helm  upgrade --install api ./devops"
+                    sh "helm  upgrade --install api-produto ./devops"
                 }
             }
         }
