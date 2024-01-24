@@ -1,7 +1,0 @@
-metrics: false
-
-version: v1
-
-mongoDb:
-  rootUser: "mongouser"
-  rootPassword: "sATr2AvKH7n/5eKjwgFGAkniVMijyBssLFmtbK+PfgI="  
