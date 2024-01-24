@@ -1,24 +1,26 @@
 version: '3'
 
 services:
-  mongodb:
-    image: mongo:4.2.8
-    ports:
-      - "27017"
+  mariadb:
+    image: mariadb
+    container_name: mariadb-container
     environment:
-      - MONGO_INITDB_ROOT_USERNAME=mongodbuser
-      - MONGO_INITDB_ROOT_PASSWORD=mongodbpwd
+      MYSQL_ROOT_PASSWORD: mariadb_root_password
+      MYSQL_DATABASE: pedelogo_catalogo
+      MYSQL_USER: mariadb_user
+      MYSQL_PASSWORD: mariadb_password
+    ports:
+      - "3306:3306"
     volumes:
-      - ./mongodb-data:/data/db
+      - ./mariadb-data:/var/lib/mysql
 
   api:
     image: thsre/api-servidor:latest
     ports:
       - "30000:80"
     environment:
-      - MONGODB_URI=mongodb://mongodbuser:mongodbpwd@mongo-service:27017/admin
-
-  mongo-service:
-    image: mongo:4.2.8
-    volumes:
-      - ./mongodb-data:/data/db
+      - MYSQL_HOST=mariadb
+      - MYSQL_PORT=3306
+      - MYSQL_DATABASE=pedelogo_catalogo
+      - MYSQL_USER=mariadb_user
+      - MYSQL_PASSWORD=mariadb_password
